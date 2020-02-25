@@ -21,7 +21,7 @@ exports.verificaToken = function(req, resp, next) {
 
         //Ebviando el usuario al request
         req.usuario = decode.usuario;
-        //Pueees continuar con las petivciones de abajo
+        //Pueees continuar con las peticiones de abajo
         //el next
         next();
 
