@@ -119,7 +119,7 @@ app.post('/', mdAuthenticacion.verificaToken, (req, res) => {
     usuario.save((err, usuarioGuardado) => {
 
         if (err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 ok: false,
                 mensaje: 'Error al crear usuario',
                 errors: err
