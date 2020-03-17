@@ -9,8 +9,6 @@ var Medico = require('../models/medico');
 
 //Rutas
 app.get('/', (req, resp, next) => {
-
-
     //espera un valor, si no viene nada se coloca 0
     var desde = req.query.desde || 0;
     desde = Number(desde);
@@ -48,6 +46,47 @@ app.get('/', (req, resp, next) => {
 });
 
 
+
+//===================================================
+//Medico by id
+//===================================================
+app.get('/:id', (req, resp) => {
+    //espera un valor, si no viene nada se coloca 0
+    var id = req.params.id;
+
+    Medico.findById(id)
+        .populate('usuario', 'nombre email img')
+        .populate('hospital')
+        .exec(
+            (err, medico) => {
+
+                if (err) {
+                    resp.status(500).json({
+                        ok: false,
+                        mensaje: 'Error en la consulta de medicos',
+                        errors: err
+                    });
+                    return;
+                }
+                if (!medico) {
+                    return resp.status(400).json({
+                        ok: false,
+                        mensaje: 'El medico con el id ' + id + ' no existe',
+                        errors: { message: 'No existe el medico con ese Id' }
+                    });
+                }
+
+                resp.status(200).json({
+                    ok: true,
+                    medico: medico
+                });
+
+            });
+
+
+});
+
+
 //===================================================
 //Actualizacion de un medico
 //===================================================
@@ -62,7 +101,7 @@ app.put('/:id', mdAuthenticacion.verificaToken, (req, res) => {
         if (err) {
             return res.status(500).json({
                 ok: false,
-                mensaje: 'Error al buscar el  hospital',
+                mensaje: 'Error al buscar el  medico',
                 errors: err
             });
         }

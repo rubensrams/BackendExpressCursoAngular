@@ -43,87 +43,91 @@ async function verify(token) {
 //Rutas
 app.post('/google', async(req, resp) => {
 
-    var token = req.body.token;
-
+    var token = req.get('Authorization')
+        //console.log(token);
 
     //Para usar el await es necesario que la funcion sea async
     var googleUser = await verify(token)
         .catch(e => {
-            return resp.status(403).json({
-                ok: false,
-                mensaje: 'Token no valido'
-            });
+            return;
+        });
+
+    if (googleUser === undefined) {
+        return resp.status(403).json({
+            ok: false,
+            mensaje: 'Token no válido'
+        });
+    } else {
+
+        Usuario.findOne({ email: googleUser.email }, (err, usuarioBD) => {
+
+            if (err) {
+                return resp.status(500).json({
+                    ok: false,
+                    mensaje: 'Error al buscar el usuario',
+                    errors: err
+                });
+            }
+            //vergificacion y registro por token
+
+            if (usuarioBD) {
+
+                if (usuarioBD.google === false) {
+                    return resp.status(400).json({
+                        ok: false,
+                        mensaje: 'Debe usar su autenticacion normal'
+
+                    });
+                } else {
+
+                    var token = jwt.sign({ usuario: usuarioBD }, SEED, { expiresIn: 14400 })
+
+                    resp.status(200).json({
+                        ok: true,
+                        usuario: usuarioBD,
+                        token: token,
+                        id: usuarioBD._id
+                    });
+                }
+            } else {
+
+                //El usuario no existe hay que crearlo
+
+                var usuario = new Usuario({
+                    nombre: googleUser.nombre,
+                    email: googleUser.email,
+                    img: googleUser.img,
+                    google: true,
+                    password: ':)'
+                });
+
+                usuario.save((err, usuarioGuardado) => {
+
+                    if (err) {
+                        return resp.status(400).json({
+                            ok: false,
+                            mensaje: 'Error al crear el usuario',
+                            errors: err
+                        });
+                    }
+
+                    var token = jwt.sign({ usuario: usuarioGuardado }, SEED, { expiresIn: 14400 })
+
+                    resp.status(200).json({
+                        ok: true,
+                        usuario: usuarioGuardado,
+                        token: token,
+                        id: usuarioGuardado._id
+                    });
+
+
+                });
+            }
+
 
         });
 
-
-    Usuario.findOne({ email: googleUser.email }, (err, usuarioBD) => {
-
-        if (err) {
-            return resp.status(500).json({
-                ok: false,
-                mensaje: 'Error al buscar el usuario',
-                errors: err
-            });
-        }
-        //vergificacion y registro por token
-
-        if (usuarioBD) {
-
-            if (usuarioBD.google === false) {
-                return resp.status(400).json({
-                    ok: false,
-                    mensaje: 'Debe usar su autenticacion normal'
-
-                });
-            } else {
-
-                var token = jwt.sign({ usuario: usuarioBD }, SEED, { expiresIn: 14400 })
-
-                resp.status(200).json({
-                    ok: true,
-                    usuario: usuarioBD,
-                    token: token,
-                    id: usuarioBD._id
-                });
-            }
-        } else {
-
-            //El usuario no existe hay que crearlo
-
-            var usuario = new Usuario({
-                nombre: googleUser.nombre,
-                email: googleUser.email,
-                img: googleUser.img,
-                google: true,
-                password: ':)'
-            });
-
-            usuario.save((err, usuarioGuardado) => {
-
-                if (err) {
-                    return resp.status(400).json({
-                        ok: false,
-                        mensaje: 'Error al crear el usuario',
-                        errors: err
-                    });
-                }
-
-                var token = jwt.sign({ usuario: usuarioGuardado }, SEED, { expiresIn: 14400 })
-
-                resp.status(200).json({
-                    ok: true,
-                    usuario: usuarioGuardado,
-                    token: token,
-                    id: usuarioGuardado._id
-                });
-
-
-            });
-        }
-
-    });
-
+    }
 
 });
 

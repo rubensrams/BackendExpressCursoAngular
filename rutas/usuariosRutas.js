@@ -17,7 +17,7 @@ app.get('/', (req, resp, next) => {
     var desde = req.query.desde || 0;
     desde = Number(desde);
 
-    Usuario.find({}, 'nombre email img role')
+    Usuario.find({}, 'nombre email img role google')
         //Salta el numero desde pasado del request y presenta los siguientes 5
         .skip(desde)
         //limita la respuesta a 5 registros
@@ -104,7 +104,7 @@ app.put('/:id', mdAuthenticacion.verificaToken, (req, res) => {
 //Creacion de un nuevo usuario
 //===================================================
 
-app.post('/', mdAuthenticacion.verificaToken, (req, res) => {
+app.post('/', (req, res) => {
 
     var body = req.body;
 
@@ -119,12 +119,13 @@ app.post('/', mdAuthenticacion.verificaToken, (req, res) => {
     usuario.save((err, usuarioGuardado) => {
 
         if (err) {
-            return res.status(500).json({
+            return res.status(400).json({
                 ok: false,
                 mensaje: 'Error al crear usuario',
                 errors: err
             });
         }
+
 
         res.status(200).json({
             ok: true,
